@@ -390,21 +390,32 @@ function buildRevisao() {
 }
 
 // ── ENVIO ─────────────────────────────────────────────────
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbxC9SnavpNxy63gUFdGvWArrz-Qjp4Nc__o5ZAz7DmKy7k8DBTSgSGoWVNQdKXkyI6e/exec";
+
 async function enviar() {
   document.getElementById("ov-send").classList.add("show");
+  const params = {
+    to_email:"ch85oliveira@gmail.com",
+    nome:g("nome"), email:g("email"), matricula:g("matricula"),
+    telefone:g("telefone"), cpf:g("cpf"),
+    cnh_cat:g("cnh-cat"), cnh_venc:fmtData(g("cnh-venc")),
+    placa:g("placa").toUpperCase(), modelo:g("modelo"), ano:g("ano"),
+    custo:g("custo")||"Não informado",
+    tipo:g("tipo"), realizado:g("realizado"), data_check:fmtData(g("data-check")),
+    estado:radios.estado, manutencao:radios.manutencao, avaria:radios.avaria,
+    pneus:radios.pneus, estepe:radios.estepe, tanque:radios.tanque,
+    hodometro:g("hodometro")+" km", obs:g("obs")||"Nenhuma",
+    fotos_ok:FVEHICLE.filter(f=>fotos[f.key]).map(f=>f.label).join(", ")||"Nenhuma",
+  };
   try {
-    await emailjs.send(EJS_SVC, EJS_TPL, {
-      to_email:"ch85oliveira@gmail.com",
-      nome:g("nome"), email:g("email"), matricula:g("matricula"),
-      telefone:g("telefone"), cpf:g("cpf"),
-      cnh_cat:g("cnh-cat"), cnh_venc:fmtData(g("cnh-venc")),
-      placa:g("placa").toUpperCase(), modelo:g("modelo"), ano:g("ano"),
-      custo:g("custo")||"Não informado",
-      tipo:g("tipo"), realizado:g("realizado"), data_check:fmtData(g("data-check")),
-      estado:radios.estado, manutencao:radios.manutencao, avaria:radios.avaria,
-      pneus:radios.pneus, estepe:radios.estepe, tanque:radios.tanque,
-      hodometro:g("hodometro")+" km", obs:g("obs")||"Nenhuma",
-      fotos_ok:FVEHICLE.filter(f=>fotos[f.key]).map(f=>f.label).join(", ")||"Nenhuma",
+    // Envia para o EmailJS
+    await emailjs.send(EJS_SVC, EJS_TPL, params);
+    // Envia para o Google Sheets
+    await fetch(SHEET_URL, {
+      method:"POST",
+      mode:"no-cors",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify(params)
     });
     document.getElementById("ov-send").classList.remove("show");
     document.getElementById("ov-ok").classList.add("show");
